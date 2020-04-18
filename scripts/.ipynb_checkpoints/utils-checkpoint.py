@@ -5,18 +5,18 @@ import numpy as np
 import torch
 import torchvision
 from torchvision import transforms
-import torchvision.transforms.functional as F
+import torchvision.transforms.functional as TF
 
 def get_next_run_name(log_dir, continue_training=False):
-    if not os.path.isdir(log_dir):
-        return os.path.join(log_dir, 'run_0')
-    else:
+    try:
         runs = [int(d[4:]) for d in next(os.walk(log_dir))[1] if d[:3] == 'run']
         
         if continue_training:
             return os.path.join(log_dir, 'run_' + str(max(runs)))
         else:
             return os.path.join(log_dir, 'run_' + str(max(runs) + 1))
+    except:
+        return os.path.join(log_dir, 'run_0')
     
     
 def save_cm(cm, filename='', classes=[]):
@@ -78,7 +78,7 @@ class Denormalize(object):
         self.inplace = inplace
 
     def __call__(self, tensor):
-        tensor = F.normalize(tensor, self.demean, self.destd, self.inplace)
+        tensor = TF.normalize(tensor, self.demean, self.destd, self.inplace)
         # clamp to get rid of numerical errors
         return torch.clamp(tensor, 0.0, 1.0)
     

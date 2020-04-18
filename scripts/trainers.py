@@ -17,8 +17,11 @@ from ignite.handlers import ModelCheckpoint, EarlyStopping, Timer
 from .utils import *
 
 
-def train(params, dataloaders_gen, continue_training=False, stats=None, scheduler=None):
-    train_loader, val_loader, holdout_loader, dataset_name, class_count = dataloaders_gen(params['train_batch_size'], params['val_batch_size'])
+def train(params, dataloaders_gen, continue_training=False, stats=None, scheduler=None, reduce_train=1.0):
+    model, input_size = params['model']
+    
+    train_loader, val_loader, holdout_loader, dataset_name, class_count = dataloaders_gen(params['train_batch_size'], params['val_batch_size'], share=reduce_train, input_size=input_size)
+    
     model_dir = os.path.join(params['log_dir'], dataset_name)
     run_dir = get_next_run_name(model_dir, continue_training)
     
@@ -35,13 +38,11 @@ def train(params, dataloaders_gen, continue_training=False, stats=None, schedule
             'conf_matrix': None
         }
     
-    model = params['model']
-    
     if params['tensorboard']:
         writer = create_summary_writer(model, train_loader, run_dir)
     device = "cpu"
-#     if torch.cuda.is_available():
-#         device = "cuda"
+    if torch.cuda.is_available():
+        device = "cuda"
     print('Device: ', device)
 
     optimizer = params['optimizer']

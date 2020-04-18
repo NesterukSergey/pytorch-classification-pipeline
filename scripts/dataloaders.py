@@ -41,7 +41,7 @@ def get_MNIST_data_loaders(train_batch_size, val_batch_size, train_hold_ratio=0.
     return train_loader, validation_loader, holdout_loader, dataset_name, class_count
 
 
-def get_Arctic_data_loaders(train_batch_size, val_batch_size, share=1.0):
+def get_Arctic_data_loaders(train_batch_size, val_batch_size, share=1.0, input_size=224):
     dataset_name = 'Arctic'
     class_count = 11
     data_dir = './data/arctic'
@@ -59,6 +59,19 @@ def get_Arctic_data_loaders(train_batch_size, val_batch_size, share=1.0):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
+    
+    if input_size != 224:
+        train_transform = transforms.Compose([
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    
+    test_transform = transforms.Compose([
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
     
     train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'train'), transform=train_transform)
     
