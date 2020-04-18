@@ -3,7 +3,9 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
+import torchvision
+from torchvision import transforms
+import torchvision.transforms.functional as F
 
 def get_next_run_name(log_dir, continue_training=False):
     if not os.path.isdir(log_dir):
@@ -67,3 +69,27 @@ def plot_stats(stats):
     print(stats['conf_matrix'])
     
 
+class Denormalize(object):
+    def __init__(self, mean, std, inplace=False):
+        self.mean = mean
+        self.demean = [-m/s for m, s in zip(mean, std)]
+        self.std = std
+        self.destd = [1/s for s in std]
+        self.inplace = inplace
+
+    def __call__(self, tensor):
+        tensor = F.normalize(tensor, self.demean, self.destd, self.inplace)
+        # clamp to get rid of numerical errors
+        return torch.clamp(tensor, 0.0, 1.0)
+    
+
+def show_batch(dataloader):
+    fig, ax = plt.subplots(1, dataloader.batch_size, sharex=True, sharey=True, figsize=(20, 10))
+    img_batch, labels = iter(dataloader).next()
+    
+    denormalize = Denormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))  
+    
+    for i in range(dataloader.batch_size):                                
+        ax[i].imshow(transforms.ToPILImage()(denormalize(img_batch[i, :, :, :])))
+        
+    print(labels)
